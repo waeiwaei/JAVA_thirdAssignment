@@ -13,10 +13,16 @@ import java.nio.file.Paths;
 /** This class implements the STAG server. */
 public final class GameServer {
 
+    public static Parser pr;
+
     private static final char END_OF_TRANSMISSION = 4;
 
-    public static void main(String[] args) throws IOException {
-        Tokenizer token = new Tokenizer(" Can you please use the axe to cutdown the tree, and cut the tree please");
+    public static void main(String[] args) throws Exception {
+        Tokenizer token = new Tokenizer("get the axe to chop the tree");
+        pr = new Parser();
+        GameState state = pr.parse(token);
+
+
         File entitiesFile = Paths.get("config" + File.separator + "basic-entities.dot").toAbsolutePath().toFile();
         File actionsFile = Paths.get("config" + File.separator + "basic-actions.xml").toAbsolutePath().toFile();
         GameServer server = new GameServer(entitiesFile, actionsFile);
@@ -45,6 +51,10 @@ public final class GameServer {
     */
     public String handleCommand(String command) {
         // TODO implement your server logic here
+
+        //Use the tokenizer to break up command string - remove decorative words, check against list of entities, built in commands as well
+
+
         return "";
     }
 
