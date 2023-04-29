@@ -10,6 +10,7 @@ public class Parser {
     GameState state;
 
     public XMLEntities parseActions;
+    public Layout parseEntities;
     public ArrayList<String> builtInCommands = new ArrayList<String>(Arrays.asList("inventory", "get", "drop", "look", "goto", "inv"));
 
 
@@ -31,7 +32,7 @@ public class Parser {
     public ArrayList<String> combinedList;
 
 
-    public Parser(XMLEntities parseActions){
+    public Parser(XMLEntities parseActions, Layout parseEntities){
 
         this.state = new GameState();
 
@@ -77,6 +78,7 @@ public class Parser {
 
         this.combinedList.replaceAll(String::toLowerCase);
         this.parseActions = parseActions;
+        this.parseEntities = parseEntities;
     }
 
     GameState parse(Tokenizer token) throws Exception {
@@ -159,6 +161,9 @@ public class Parser {
 
         if(token.tokens.get(0).equalsIgnoreCase("look") || token.tokens.get(0).equalsIgnoreCase("inventory") || token.tokens.get(0).equalsIgnoreCase("inv")){
 
+            //assigning the value of the BuiltIn Command
+            state.builtInCommand = token.tokens.get(0);
+
             if(token.hasMoreTokens()){
                 return false;
             }
@@ -167,9 +172,9 @@ public class Parser {
 
         }else{
 
+            /*CHECKING FOR THE CASE OF COMPOSITE - extracts the builtInCommand if any*/
             int builtInCommandCounter = 0;
             String BCommand = "";
-
 
             //check if it is a composite built-in command (built-in command + built-in command)
             for(int i = 0; i < token.tokens.size(); i++){
@@ -202,11 +207,19 @@ public class Parser {
                 return false;
             }
 
-
+            state.builtInCommand = BCommand;
+            /**********************************************************************************************/
 
             //Check if sequence is respected
             //goto location
             if (BCommand.equalsIgnoreCase("goto")){
+
+                //gets the index of the command - must check if the location comes after
+                int indexOfCmd = token.tokens.indexOf(BCommand);
+
+                if(indexOfCmd + 1 == token.tokens.size()){
+                    return false;
+                }
 
                 int locationCounter = 0;
 
@@ -219,6 +232,12 @@ public class Parser {
                                 return false;
                             }
 
+                            //find cluster location
+                            for(int q = 0; q < parseEntities.locations.clusters.size(); q++){
+                                if(parseEntities.locations.clusters.get(q).name.equalsIgnoreCase(token.tokens.get(j))){
+                                       state.clusterLocation = parseEntities.locations.clusters.get(q);
+                                }
+                            }
                         }
                     }
                 }
@@ -252,6 +271,18 @@ public class Parser {
                             if (artefactEntitiesCounter > 1) {
                                 return false;
                             }
+
+                            //we want to populate the matching artefacts to get
+                            for(int q = 0; q < parseEntities.locations.clusters.size(); q++){
+                                for(int u = 0; u < parseEntities.locations.clusters.get(q).artefacts.size(); u++){
+
+                                    if(parseEntities.locations.clusters.get(q).artefacts.get(u).getName().equalsIgnoreCase(token.tokens.get(j))){
+                                        state.arte.add(parseEntities.locations.clusters.get(q).artefacts.get(u));
+                                    }
+
+                                }
+                            }
+
                         }
                     }
                 }
@@ -276,6 +307,17 @@ public class Parser {
                             if (entitiesCounter > 1) {
                                 return false;
                             }
+
+                            //we want to populate the matching artefacts to drop
+                            for(int q = 0; q < parseEntities.locations.clusters.size(); q++){
+                                for(int u = 0; u < parseEntities.locations.clusters.get(q).artefacts.size(); u++){
+
+                                    if(parseEntities.locations.clusters.get(q).artefacts.get(u).getName().equalsIgnoreCase(token.tokens.get(j))){
+                                        state.arte.add(parseEntities.locations.clusters.get(q).artefacts.get(u));
+                                    }
+
+                                }
+                            }
                         }
                     }
                 }
@@ -287,7 +329,6 @@ public class Parser {
                 return true;
             }
         }
-
         return false;
     }
 
@@ -308,18 +349,19 @@ public class Parser {
 
     boolean checkActionCommands(Tokenizer token){
 
-        int numberOfActionTriggers = 0;
-
+//        int numberOfActionTriggers = 0;
+        ArrayList<String> actionTriggersIdentified = new ArrayList<>();
         for(int i = 0; i < token.tokens.size(); i++){
             for(int j = 0; j < actionTriggers.size(); j++){
                 if(token.tokens.get(i).equalsIgnoreCase(actionTriggers.get(j))){
-                    numberOfActionTriggers++;
+//                    numberOfActionTriggers++;
+                    actionTriggersIdentified.add(token.tokens.get(i));
                 }
             }
         }
 
 
-        if(numberOfActionTriggers == 1){
+        if(actionTriggersIdentified.size() == 1){
 
             //we need to check if there is atleast one subject entity exists
             int numberOfSubjectEntities = 0;
@@ -337,17 +379,23 @@ public class Parser {
             }
 
 
-        }else if (numberOfActionTriggers > 1){
+        }else if (actionTriggersIdentified.size() == 2){
+
+            //both unqiue action keyphrase triggers - "cutdown" and "chop"
+            //but both triggers contains the same GameAction within their list - so this is still a valid action
+            //if they did not have the same GameAction, this would be considered as a double command which is not allowed
+            //chop with axe to cutdown tree
 
             //if the command contains more than one action trigger, need to identify if the triggers used contain the same GameAction
-            HashSet<GameAction> u = parseActions.actions.get("cut");
-            HashSet<GameAction> h = parseActions.actions.get("chop");
+            HashSet<GameAction> firstActionTrigger = parseActions.actions.get(actionTriggersIdentified.get(0));
+            HashSet<GameAction> secondActionTrigger = parseActions.actions.get(actionTriggersIdentified.get(1));
 
             boolean hasMatchingGameAction = false;
-            for (GameAction gameAction : u) {
-                for(GameAction gmA : h) {
-                    if (gameAction.equals(gmA)) {
+            for (GameAction gameActionFirst : firstActionTrigger) {
+                for(GameAction gameActionSecond : secondActionTrigger) {
+                    if (gameActionFirst.equals(gameActionSecond)) {
                         hasMatchingGameAction = true;
+                        state.gameAction = gameActionFirst;
                         break;
                     }
                 }
@@ -359,7 +407,6 @@ public class Parser {
             } else {
                 System.out.println("The two sets do not contain any matching GameAction.");
                 return false;
-
             }
 
         }

@@ -4,10 +4,12 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Hashtable;
 
 import com.alexmerz.graphviz.ParseException;
 import com.alexmerz.graphviz.Parser;
+import com.alexmerz.graphviz.objects.Edge;
 import com.alexmerz.graphviz.objects.Graph;
 import com.alexmerz.graphviz.objects.Node;
 
@@ -53,11 +55,13 @@ public class ParseDotFile {
         for(int i = 0; i < clusterNum; i++){
 
             String lc = gl.get(0).getSubgraphs().get(0).getSubgraphs().get(i).getNodes(false).get(0).getId().getId();
+            Hashtable<String,String> description = gl.get(0).getSubgraphs().get(0).getSubgraphs().get(i).getNodes(false).get(0).getAttributes();
 
             Cluster clus = new Cluster();
 
             layout.locations.locationsList.add(lc);
             clus.name = lc;
+            clus.description = description.get("description");
 
             //accessing the artefacts and the furniture
             int subgraphsNum = gl.get(0).getSubgraphs().get(0).getSubgraphs().get(i).getSubgraphs().size();
@@ -147,6 +151,37 @@ public class ParseDotFile {
         }
 
         layout.fullEntities = ents;
+
+        //get the paths to each entity
+        ArrayList<Edge> paths = gl.get(0).getSubgraphs().get(1).getEdges();
+
+        for(int i = 0; i < paths.size(); i++){
+            String pathString = paths.get(i).toString();
+            String [] pathRoutes = pathString.split("->");
+
+            for(int j = 0; j < pathRoutes.length; j++){
+                pathRoutes[j] = pathRoutes[j].replace(";", "");
+                pathRoutes[j] = pathRoutes[j].replace("\s", "");
+                pathRoutes[j] = pathRoutes[j].replace("\n", "");
+            }
+
+            System.out.print(pathRoutes);
+
+            //store the paths for each cluster location
+            for(int k = 0; k < layout.locations.clusters.size(); k++){
+                if(layout.locations.clusters.get(k).name.equalsIgnoreCase(pathRoutes[0])){
+                    //when the clusters are the same, we want to add to that particular cluster ArrayList<String> path
+                    layout.locations.clusters.get(k).paths.add(pathRoutes[1]);
+                }
+            }
+
+
+//            Paths pat =  new Paths();
+//            pat.paths.put(pathRoutes[0], pathRoutes[1]);
+//
+//            layout.paths.add(pat);
+
+        }
 
         return layout;
     }

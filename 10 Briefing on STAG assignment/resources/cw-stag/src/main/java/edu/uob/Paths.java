@@ -1,7 +1,10 @@
 package edu.uob;
 
-import java.util.Hashtable;
+
+import java.util.HashMap;
+
+
 
 public class Paths {
-    Hashtable<String, String> path = new Hashtable<>();
+    public HashMap<String, String> paths = new HashMap<>();
 }
