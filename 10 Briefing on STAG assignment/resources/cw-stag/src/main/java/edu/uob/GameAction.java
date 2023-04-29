@@ -4,10 +4,25 @@ import java.util.ArrayList;
 
 public class GameAction {
 
-    ArrayList<String> subjects = new ArrayList<>();
-    ArrayList<String> consumed = new ArrayList<>();
-    ArrayList<String> produced = new ArrayList<>();
+    public ArrayList<String> subjects = new ArrayList<>();
+    public ArrayList<String> consumed = new ArrayList<>();
+    public ArrayList<String> produced = new ArrayList<>();
+    String narration;
 
-    String[] narration;
+    @Override
+    public boolean equals(Object o) {
+        if (o == this) {
+            return true;
+        }
+        if (!(o instanceof GameAction)) {
+            return false;
+        }
+
+        GameAction other = (GameAction) o;
+        return this.subjects.equals(other.subjects) &&
+                this.consumed.equals(other.consumed) &&
+                this.produced.equals(other.produced);
+    }
+
 
 }

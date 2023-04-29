@@ -4,9 +4,9 @@ import java.util.ArrayList;
 
 public class Cluster {
 
-    public String location;
-    ArrayList<Artefacts> artefacts = new ArrayList<>();
-    ArrayList<Furniture> furnitures = new ArrayList<>();
-    ArrayList<Characters> characters = new ArrayList<>();
+    public String name;
+    public ArrayList<Artefacts> artefacts = new ArrayList<>();
+    public ArrayList<Furniture> furnitures = new ArrayList<>();
+    public ArrayList<Characters> characters = new ArrayList<>();
 
 }

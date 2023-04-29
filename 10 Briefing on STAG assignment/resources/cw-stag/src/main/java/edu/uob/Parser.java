@@ -1,118 +1,161 @@
 package edu.uob;
 
-import com.alexmerz.graphviz.Token;
-
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 
 public class Parser {
 
     GameState state;
 
-    public String[] builtInCommands = {"inventory", "get", "drop", "look", "goto"};
+    public XMLEntities parseActions;
+    public ArrayList<String> builtInCommands = new ArrayList<String>(Arrays.asList("inventory", "get", "drop", "look", "goto", "inv"));
 
-    //currently hard-coded, will need to identify how to populate this through reading the XML document
-    public String[] actionTriggers = {"cut", "chop", "cutdown"};
 
-    public String[] subjectEntities = {"tree", "axe"};
+    //coming from parseXMLFile
+    public ArrayList<String> actionTriggers;
+    public ArrayList<String> subjectEntities;
+    public ArrayList<String> consumedEntities;
+    public ArrayList<String> producedEntities;
 
-    public String[] artefactEntities = {"axe", "coin"};
 
-    public String[] furnitureEntities = {"tree"};
 
-    public String[] characterEntities = {"elf"};
+    //coming from parseDotFile
+    public ArrayList<String> artefactEntities;
+    public ArrayList<String> furnitureEntities;
+    public ArrayList<String> characterEntities;
+    public ArrayList<String> locations;
 
-    public String[] locations = {"forest", "cellar", "cabin"};
 
-    public String[] consumedEntities = {"tree"};
+    public ArrayList<String> combinedList;
 
-    public String[] producedEntities = {"log"};
 
-    public Parser(){
+    public Parser(XMLEntities parseActions){
+
         this.state = new GameState();
+
+        //parseDotFile
+        this.artefactEntities = Artefacts.listOfAllArtefactsNames;
+        this.furnitureEntities = Furniture.listOfAllFurnitureNames;
+        this.characterEntities = Characters.listOfAllCharacterNames;
+        this.locations = Locations.locationsList;
+
+
+        //parseXMLFile
+        this.actionTriggers = parseActions.actionTriggersList;
+        this.subjectEntities = parseActions.subjectEntitiesList;
+        this.consumedEntities = parseActions.consumedEntitiesList;
+        this.producedEntities = parseActions.producedEntitiesList;
+
+
+        this.combinedList = new ArrayList<>();
+        combinedList.addAll(builtInCommands);
+        combinedList.addAll(actionTriggers);
+        combinedList.addAll(subjectEntities);
+        combinedList.addAll(consumedEntities);
+        combinedList.addAll(producedEntities);
+        combinedList.addAll(artefactEntities);
+        combinedList.addAll(furnitureEntities);
+        combinedList.addAll(characterEntities);
+        combinedList.addAll(locations);
+
+        HashSet<String> uniqueSet = new HashSet<String>(combinedList);
+        combinedList.clear();
+        combinedList.addAll(uniqueSet);
+
+
+        //convert to lower case
+        this.artefactEntities.replaceAll(String::toLowerCase);
+        this.furnitureEntities.replaceAll(String::toLowerCase);
+        this.characterEntities.replaceAll(String::toLowerCase);
+        this.locations.replaceAll(String::toLowerCase);
+        this.actionTriggers.replaceAll(String::toLowerCase);
+        this.subjectEntities.replaceAll(String::toLowerCase);
+        this.consumedEntities.replaceAll(String::toLowerCase);
+        this.producedEntities.replaceAll(String::toLowerCase);
+
+        this.combinedList.replaceAll(String::toLowerCase);
+        this.parseActions = parseActions;
     }
 
     GameState parse(Tokenizer token) throws Exception {
 
-        for (int i = 0; i < actionTriggers.length; i++) {
-            actionTriggers[i] = actionTriggers[i].toLowerCase();
-        }
 
-        for (int i = 0; i < builtInCommands.length; i++) {
-            builtInCommands[i] = builtInCommands[i].toLowerCase();
-        }
-
-        //create a combined array
-        ArrayList<String> combinedArray = new ArrayList<String>();
-        for(int i = 0; i < builtInCommands.length; i++){
-            combinedArray.add(builtInCommands[i]);
-        }
-
-        for(int i = 0; i < artefactEntities.length; i++){
-            combinedArray.add(artefactEntities[i]);
-        }
-
-        for(int i = 0; i < locations.length; i++){
-            combinedArray.add(locations[i]);
-        }
-
-        for(int i = 0; i < actionTriggers.length; i++){
-            combinedArray.add(actionTriggers[i]);
-        }
-
-        for(int i = 0; i < furnitureEntities.length; i++){
-            combinedArray.add(furnitureEntities[i]);
-        }
-
-        for(int i = 0; i < characterEntities.length; i++){
-            combinedArray.add(characterEntities[i]);
-        }
-
-
-        for(int i = 0; i < subjectEntities.length; i++){
-            combinedArray.add(subjectEntities[i]);
-        }
-
+        //filter out tokens for "Decorative" words
         ArrayList<String> temporaryArray = new ArrayList<>();
-        //we want to filter out decorative words that are not included in the actionCommands and builtCommands list
-        //filter out the builtCommands first
-        for(int i = 0; i < token.tokens.size() ; i++){
-            for(int j = 0; j < combinedArray.size(); j++) {
 
-                if (token.tokens.get(i).equalsIgnoreCase(combinedArray.get(j))) {
+        for(int i = 0; i < token.tokens.size() ; i++){
+            for(int j = 0; j < combinedList.size(); j++) {
+
+                if (token.tokens.get(i).equalsIgnoreCase(combinedList.get(j))) {
                     temporaryArray.add(token.tokens.get(i));
                 }
             }
         }
 
         token.tokens = temporaryArray;
+        token.tokens.replaceAll(String::toLowerCase);
 
-        //Commands from user should only contain
-        //Case 1 : builtInCommands (1)
-        //Case 2 : builtInCommands + entity (1)
-        //Case 3 : actionCommands + entity (1)
 
-        boolean c1 = true;
+
+
+
+
+
+
+
+        boolean builtInCmdInsruction = true;
+        boolean actionCmdInstruction = true;
 
         //check if it is a builtInCommand
         if(!checkBuiltInCommand(token)){
-            c1 = false;
+            builtInCmdInsruction = false;
         }
 
-        if(c1 == false && checkActionCommands(token)){
-            c1 = true;
+        if(!builtInCmdInsruction && !checkActionCommands(token)){
+            actionCmdInstruction = false;
         }
 
-        if(c1 == false){
+        if(!actionCmdInstruction && !builtInCmdInsruction){
             throw new Exception("Error - Parser");
         }
 
         return state;
     }
 
+
+
+
+
+
     boolean checkBuiltInCommand(Tokenizer token){
-        //Case 1 : builtInCommands (1)
-        //Case 2 : builtInCommands + entity (1)
+        //Case 1 :
+        //Built-in Commands : Look, inventory, inv
+        // should not have any other tokens after it
+
+
+        //Case 2 :
+        //Built-in Commands : goto, get, drop
+        //must follow the sequence of "built-in" + entity (any type of entity)
+        // e.g.
+        // goto cellar (if the entity is not a location - flag out to user during gameplay : all location will have valid paths, if player inputs path that does not exist issue warning)
+        // get tree  (if entity is not an artefact - flag out to user during gameplay : entities which are both artefact and consumed entities)
+        // drop key  (valid)
+
+        //invalid built-in commands
+        //e.g.
+        //Composite commands
+        //goto cellar and get key (built-in + built-in)
+        //goto cellar and cut tree (built-in + action trigger)
+
+        //Wrong ordering
+        //key drop
+        //forest goto
+
+        //Built-in command only, without entity
+        //get
+        //drop
 
         if(token.tokens.get(0).equalsIgnoreCase("look") || token.tokens.get(0).equalsIgnoreCase("inventory") || token.tokens.get(0).equalsIgnoreCase("inv")){
 
@@ -127,11 +170,14 @@ public class Parser {
             int builtInCommandCounter = 0;
             String BCommand = "";
 
+
+            //check if it is a composite built-in command (built-in command + built-in command)
             for(int i = 0; i < token.tokens.size(); i++){
-                for(int j = 0; j < builtInCommands.length; j++) {
-                    if (token.tokens.get(i).equalsIgnoreCase(builtInCommands[j])) {
+                for(int j = 0; j < builtInCommands.size(); j++) {
+                    if (token.tokens.get(i).equalsIgnoreCase(builtInCommands.get(j))) {
                         builtInCommandCounter++;
 
+                        //if there is more than one built-in command, then it is considered to be a composite command which is not allowed
                         if(builtInCommandCounter > 1){
                             return false;
                         }
@@ -141,61 +187,90 @@ public class Parser {
                 }
             }
 
-            //we want to make sure the sequence of tokens is respected
-            //goto {location : locations}
+            int actionTriggerCounter = 0;
+            //check if it is a composite built-in command + action trigger
+            for(int i = 0; i < token.tokens.size(); i++){
+                for(int j = 0; j < actionTriggers.size(); j++){
+                    if(token.tokens.get(i).equalsIgnoreCase(actionTriggers.get(j))){
+                        actionTriggerCounter++;
+                    }
+                }
+            }
+
+            //checking if the token has both the action triggers and built-in commands, which is not allowed
+            if(builtInCommandCounter > 1 && actionTriggerCounter > 1){
+                return false;
+            }
+
+
+
+            //Check if sequence is respected
+            //goto location
             if (BCommand.equalsIgnoreCase("goto")){
 
                 int locationCounter = 0;
 
                 for(int j = 0; j < token.tokens.size(); j++){
-                    for (int i = 0; i < locations.length; i++) {
-                        if (token.tokens.get(j).equalsIgnoreCase(locations[i])) {
+                    for (int i = 0; i < locations.size(); i++) {
+                        if (token.tokens.get(j).equalsIgnoreCase(locations.get(i))) {
                             locationCounter++;
 
                             if (locationCounter > 1) {
                                 return false;
                             }
+
                         }
                     }
                 }
 
-
+                //if none of the following tokens match with any location in locations list, return false
                 if(locationCounter != 1){
+                    return false;
+                }else{
+                    return true;
+                }
+
+
+            //get {artefact-entity : artefact-entities}
+            //also checks if the there is atleast one artefact entity to get and not more than one
+            } else if (BCommand.equalsIgnoreCase("get")){
+
+                //gets the index of the command - must check if the entity comes after
+                int indexOfCmd = token.tokens.indexOf(BCommand);
+
+                if(indexOfCmd + 1 == token.tokens.size()){
                     return false;
                 }
 
-                return true;
-
-            //get {entity : entities}
-            } else if (BCommand.equalsIgnoreCase("get")){
-
-                int entitiesCounter = 0;
+                int artefactEntitiesCounter = 0;
 
                 for(int j = 0; j < token.tokens.size(); j++) {
-                    for (int i = 0; i < artefactEntities.length; i++) {
-                        if (token.tokens.get(j).equalsIgnoreCase(artefactEntities[i])) {
-                            entitiesCounter++;
+                    for (int i = 0; i < artefactEntities.size(); i++) {
+                        if (token.tokens.get(j).equalsIgnoreCase(artefactEntities.get(i))) {
+                            artefactEntitiesCounter++;
 
-                            if (entitiesCounter > 1) {
+                            if (artefactEntitiesCounter > 1) {
                                 return false;
                             }
                         }
                     }
                 }
 
-                if(entitiesCounter != 1){
+                if(artefactEntitiesCounter != 1){
                     return false;
                 }
 
                 return true;
 
+                //get {artefact-entity : artefact-entities}
+                //also checks if the there is atleast one artefact entity to drop and not more than one
             } else if (BCommand.equalsIgnoreCase("drop")) {
 
                 int entitiesCounter = 0;
 
                 for(int j = 0; j < token.tokens.size(); j++) {
-                    for (int i = 0; i < artefactEntities.length; i++) {
-                        if (token.tokens.get(j).equalsIgnoreCase(artefactEntities[i])) {
+                    for (int i = 0; i < artefactEntities.size(); i++) {
+                        if (token.tokens.get(j).equalsIgnoreCase(artefactEntities.get(i))) {
                             entitiesCounter++;
 
                             if (entitiesCounter > 1) {
@@ -216,6 +291,7 @@ public class Parser {
         return false;
     }
 
+    //atleast one trigger and one subject-entity
     //cutdown,tree
     //chop,axe,cutdown,tree
     //cutdown,tree,axe
@@ -225,30 +301,67 @@ public class Parser {
     //tree,chop,axe
     //chop,axe
 
+    //Valid
+    //chop with axe to cutdown tree
+    //in this example, both chop and cut down are trigger phrases that would match the same action.
+    //need to pick out the trigger words, and see if they are to the same game action
+
     boolean checkActionCommands(Tokenizer token){
 
-        int triggerCounter = 0;
-        int entitiesCounter = 0;
-        //triggers <keyphrases> + subject <entities>
+        int numberOfActionTriggers = 0;
+
         for(int i = 0; i < token.tokens.size(); i++){
-            //for each token we want to check whether there is atleast one trigger
-            for(int j = 0; j < actionTriggers.length; j++) {
-                if (token.tokens.get(i).equalsIgnoreCase(actionTriggers[j])) {
-                    triggerCounter++;
+            for(int j = 0; j < actionTriggers.size(); j++){
+                if(token.tokens.get(i).equalsIgnoreCase(actionTriggers.get(j))){
+                    numberOfActionTriggers++;
                 }
             }
         }
 
-        for(int i = 0; i < token.tokens.size(); i++){
-            for(int j = 0;j < subjectEntities.length; j++){
-                if(token.tokens.get(i).equalsIgnoreCase(subjectEntities[j])){
-                    entitiesCounter++;
+
+        if(numberOfActionTriggers == 1){
+
+            //we need to check if there is atleast one subject entity exists
+            int numberOfSubjectEntities = 0;
+            for(int i = 0; i < token.tokens.size(); i++){
+                for(int j = 0; j < subjectEntities.size();j++) {
+                    if (token.tokens.get(i).equalsIgnoreCase(subjectEntities.get(j))) {
+                        numberOfSubjectEntities++;
+                    }
                 }
             }
-        }
 
-        if(triggerCounter > 0 && entitiesCounter > 0){
-            return true;
+            //if the command does not contain any subjectEntities, we return false
+            if(numberOfSubjectEntities == 0){
+                return false;
+            }
+
+
+        }else if (numberOfActionTriggers > 1){
+
+            //if the command contains more than one action trigger, need to identify if the triggers used contain the same GameAction
+            HashSet<GameAction> u = parseActions.actions.get("cut");
+            HashSet<GameAction> h = parseActions.actions.get("chop");
+
+            boolean hasMatchingGameAction = false;
+            for (GameAction gameAction : u) {
+                for(GameAction gmA : h) {
+                    if (gameAction.equals(gmA)) {
+                        hasMatchingGameAction = true;
+                        break;
+                    }
+                }
+            }
+
+            if (hasMatchingGameAction) {
+                System.out.println("The two sets contain at least one matching GameAction.");
+                return true;
+            } else {
+                System.out.println("The two sets do not contain any matching GameAction.");
+                return false;
+
+            }
+
         }
 
         return false;

@@ -9,21 +9,23 @@ import java.io.OutputStreamWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 
 /** This class implements the STAG server. */
 public final class GameServer {
 
-    public static Parser pr;
+    Layout parseEntitiesList = new Layout();
+    XMLEntities parseActionList = new XMLEntities();
+
+    Parser pr;
 
     private static final char END_OF_TRANSMISSION = 4;
 
     public static void main(String[] args) throws Exception {
-        Tokenizer token = new Tokenizer("get the axe to chop the tree");
-        pr = new Parser();
-        GameState state = pr.parse(token);
 
-
-        File entitiesFile = Paths.get("config" + File.separator + "basic-entities.dot").toAbsolutePath().toFile();
+        File entitiesFile = Paths.get("config" + File.separator + "extended-entities.dot").toAbsolutePath().toFile();
         File actionsFile = Paths.get("config" + File.separator + "basic-actions.xml").toAbsolutePath().toFile();
         GameServer server = new GameServer(entitiesFile, actionsFile);
         server.blockingListenOn(8888);
@@ -39,8 +41,28 @@ public final class GameServer {
     * @param actionsFile The game configuration file containing all game actions to use in your game
     *
     */
+
     public GameServer(File entitiesFile, File actionsFile) {
         // TODO implement your server logic here
+
+       try{
+           //parses both dot and XML files
+           ParseDotFile pDOT = new ParseDotFile();
+           parseEntitiesList = pDOT.getEntities(entitiesFile);
+
+           ParseXMLFile pXML = new ParseXMLFile();
+           parseActionList =  pXML.getActions(actionsFile);
+
+
+           Tokenizer token = new Tokenizer("get axe and drop key");
+           pr = new Parser(parseActionList);
+           GameState state = pr.parse(token);
+
+
+       }catch(Exception err){
+           System.out.println(err);
+       }
+
     }
 
     /**
@@ -49,11 +71,15 @@ public final class GameServer {
     *
     * <p>This method handles all incoming game commands and carries out the corresponding actions.
     */
-    public String handleCommand(String command) {
+    public String handleCommand(String command) throws IOException {
         // TODO implement your server logic here
+        try {
+//            Tokenizer token = new Tokenizer("get the axe and goto forest");
+//            pr = new Parser(parseActionList);
+//            GameState state = pr.parse(token);
+        }catch (Exception something){
 
-        //Use the tokenizer to break up command string - remove decorative words, check against list of entities, built in commands as well
-
+        }
 
         return "";
     }
