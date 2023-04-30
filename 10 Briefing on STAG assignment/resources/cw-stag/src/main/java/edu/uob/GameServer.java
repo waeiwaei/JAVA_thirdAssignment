@@ -19,7 +19,8 @@ public final class GameServer {
     Layout parseEntitiesList = new Layout();
     XMLEntities parseActionList = new XMLEntities();
     Parser pr;
-    static ProcessUserCommand changeGameState;
+    static CurrentGame currentGame;
+    PlayerGameState player;
 
     private static final char END_OF_TRANSMISSION = 4;
 
@@ -53,17 +54,16 @@ public final class GameServer {
            ParseXMLFile pXML = new ParseXMLFile();
            parseActionList =  pXML.getActions(actionsFile);
 
+           player = new PlayerGameState(parseEntitiesList);
 
-           Tokenizer token = new Tokenizer("look");
-           pr = new Parser(parseActionList, parseEntitiesList);
-           GameState state = pr.parse(token);
-
-           System.out.println(state);
-
-
-           changeGameState = new ProcessUserCommand(parseEntitiesList, state);
-           String returnValue = changeGameState.process();
-           System.out.println(returnValue);
+//           PlayerGameState player = new PlayerGameState(parseEntitiesList);
+//           Tokenizer token = new Tokenizer("goto forest");
+//           pr = new Parser(parseActionList, parseEntitiesList);
+//           player.gamestateplayer = pr.parse(token);
+//
+////            currentGame = new CurrentGame(parseEntitiesList);
+//           String returnValue = CurrentGame.process(player, parseEntitiesList);
+//           System.out.println(returnValue);
 
        }catch(Exception err){
            System.out.println(err);
@@ -78,16 +78,25 @@ public final class GameServer {
     * <p>This method handles all incoming game commands and carries out the corresponding actions.
     */
     public String handleCommand(String command) throws IOException {
+
+        String returnValue = "";
+
         // TODO implement your server logic here
         try {
-//            Tokenizer token = new Tokenizer("get the axe and goto forest");
-//            pr = new Parser(parseActionList);
-//            GameState state = pr.parse(token);
-        }catch (Exception something){
 
+            Tokenizer token = new Tokenizer(command);
+            pr = new Parser(parseActionList, parseEntitiesList);
+            player.gamestateplayer = pr.parse(token, player);
+
+//            currentGame = new CurrentGame(parseEntitiesList);
+            returnValue = CurrentGame.process(player, parseEntitiesList);
+            //System.out.println(returnValue);
+
+        }catch (Exception something){
+            return something.getMessage();
         }
 
-        return "";
+        return returnValue;
     }
 
     //  === Methods below are there to facilitate server related operations. ===

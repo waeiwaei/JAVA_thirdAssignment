@@ -81,7 +81,7 @@ public class Parser {
         this.parseEntities = parseEntities;
     }
 
-    GameState parse(Tokenizer token) throws Exception {
+    GameState parse(Tokenizer token, PlayerGameState currentPlayerState) throws Exception {
 
 
         //filter out tokens for "Decorative" words
@@ -111,7 +111,7 @@ public class Parser {
         boolean actionCmdInstruction = true;
 
         //check if it is a builtInCommand
-        if(!checkBuiltInCommand(token)){
+        if(!checkBuiltInCommand(token, currentPlayerState)){
             builtInCmdInsruction = false;
         }
 
@@ -120,7 +120,7 @@ public class Parser {
         }
 
         if(!actionCmdInstruction && !builtInCmdInsruction){
-            throw new Exception("Error - Parser");
+            throw new Exception("Not a valid command\n");
         }
 
         return state;
@@ -131,7 +131,7 @@ public class Parser {
 
 
 
-    boolean checkBuiltInCommand(Tokenizer token){
+    boolean checkBuiltInCommand(Tokenizer token, PlayerGameState currentPlayerState){
         //Case 1 :
         //Built-in Commands : Look, inventory, inv
         // should not have any other tokens after it
@@ -210,6 +210,7 @@ public class Parser {
             state.builtInCommand = BCommand;
             /**********************************************************************************************/
 
+
             //Check if sequence is respected
             //goto location
             if (BCommand.equalsIgnoreCase("goto")){
@@ -277,12 +278,11 @@ public class Parser {
                                 for(int u = 0; u < parseEntities.locations.clusters.get(q).artefacts.size(); u++){
 
                                     if(parseEntities.locations.clusters.get(q).artefacts.get(u).getName().equalsIgnoreCase(token.tokens.get(j))){
-                                        state.arte.add(parseEntities.locations.clusters.get(q).artefacts.get(u));
+                                        state.artefact.add(parseEntities.locations.clusters.get(q).artefacts.get(u));
                                     }
 
                                 }
                             }
-
                         }
                     }
                 }
@@ -297,6 +297,8 @@ public class Parser {
                 //also checks if the there is atleast one artefact entity to drop and not more than one
             } else if (BCommand.equalsIgnoreCase("drop")) {
 
+                //we need to count the entities, there should only be one
+                //any more than one entity that needs to drop will cause an error
                 int entitiesCounter = 0;
 
                 for(int j = 0; j < token.tokens.size(); j++) {
@@ -309,13 +311,9 @@ public class Parser {
                             }
 
                             //we want to populate the matching artefacts to drop
-                            for(int q = 0; q < parseEntities.locations.clusters.size(); q++){
-                                for(int u = 0; u < parseEntities.locations.clusters.get(q).artefacts.size(); u++){
-
-                                    if(parseEntities.locations.clusters.get(q).artefacts.get(u).getName().equalsIgnoreCase(token.tokens.get(j))){
-                                        state.arte.add(parseEntities.locations.clusters.get(q).artefacts.get(u));
-                                    }
-
+                            for(int q = 0; q < currentPlayerState.inventory.size(); q++){
+                                if(currentPlayerState.inventory.get(q).getName().equalsIgnoreCase(token.tokens.get(j))){
+                                    state.artefact.add(currentPlayerState.inventory.get(q));
                                 }
                             }
                         }
@@ -360,35 +358,57 @@ public class Parser {
             }
         }
 
-
+        //[chop , tree]
         if(actionTriggersIdentified.size() == 1){
 
             //we need to check if there is atleast one subject entity exists
-            int numberOfSubjectEntities = 0;
+            ArrayList<String> numberOfSubjectEntities = new ArrayList<>();
             for(int i = 0; i < token.tokens.size(); i++){
                 for(int j = 0; j < subjectEntities.size();j++) {
                     if (token.tokens.get(i).equalsIgnoreCase(subjectEntities.get(j))) {
-                        numberOfSubjectEntities++;
+                        numberOfSubjectEntities.add(token.tokens.get(i));
                     }
                 }
             }
 
             //if the command does not contain any subjectEntities, we return false
-            if(numberOfSubjectEntities == 0){
+            if(numberOfSubjectEntities.size() != 1){
                 return false;
             }
 
+            //set gameState for the Action Command
+            HashSet<GameAction> listGameActions = parseActions.actions.get(actionTriggersIdentified.get(0));
+
+            for(GameAction gameAction1 : listGameActions){
+                if(gameAction1.subjects.contains(numberOfSubjectEntities.get(0))){
+                    state.gameAction = gameAction1;
+                }
+            }
+
+            return true;
+        // [chop,axe,cutdown,tree]
 
         }else if (actionTriggersIdentified.size() == 2){
 
             //both unqiue action keyphrase triggers - "cutdown" and "chop"
             //but both triggers contains the same GameAction within their list - so this is still a valid action
             //if they did not have the same GameAction, this would be considered as a double command which is not allowed
+
+
+
+
+
             //chop with axe to cutdown tree
 
+
+
+
             //if the command contains more than one action trigger, need to identify if the triggers used contain the same GameAction
+            //chop
             HashSet<GameAction> firstActionTrigger = parseActions.actions.get(actionTriggersIdentified.get(0));
+            //cutdown
             HashSet<GameAction> secondActionTrigger = parseActions.actions.get(actionTriggersIdentified.get(1));
+
 
             boolean hasMatchingGameAction = false;
             for (GameAction gameActionFirst : firstActionTrigger) {

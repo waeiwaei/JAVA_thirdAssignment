@@ -104,6 +104,7 @@ public class ParseDotFile {
                         Hashtable <String, String> attr = gl.get(0).getSubgraphs().get(0).getSubgraphs().get(i).getSubgraphs().get(j).getNodes(false).get(k).getAttributes();
 
                         artefact = new Artefacts(entity, attr.get("description"));
+
                         Artefacts.listOfAllArtefactsNames.add(entity);
                         artefactList.add(artefact);
                     }
@@ -120,7 +121,6 @@ public class ParseDotFile {
                         furniture = new Furniture(entity, attr.get("description"));
 
                         Furniture.listOfAllFurnitureNames.add(entity);
-
                         furnitureList.add(furniture);
 
                     }
@@ -130,6 +130,9 @@ public class ParseDotFile {
             clus.artefacts = artefactList;
             clus.furnitures = furnitureList;
             clus.characters = characterList;
+            clus.fullListEntitiesInCluster.addAll(clus.artefacts);
+            clus.fullListEntitiesInCluster.addAll(clus.furnitures);
+            clus.fullListEntitiesInCluster.addAll(clus.characters);
 
             location.clusters.add(clus);
         }
@@ -164,8 +167,6 @@ public class ParseDotFile {
                 pathRoutes[j] = pathRoutes[j].replace("\s", "");
                 pathRoutes[j] = pathRoutes[j].replace("\n", "");
             }
-
-            System.out.print(pathRoutes);
 
             //store the paths for each cluster location
             for(int k = 0; k < layout.locations.clusters.size(); k++){

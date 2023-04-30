@@ -1,5 +1,6 @@
 package edu.uob;
 
+
 public abstract class GameEntity
 {
     private String name;

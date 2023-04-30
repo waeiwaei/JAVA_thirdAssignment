@@ -8,10 +8,10 @@ public class GameState {
     GameAction gameAction = new GameAction();
 
     //Artefact to be manipulated with
-    ArrayList<Artefacts> arte = new ArrayList<>();
+    ArrayList<Artefacts> artefact = new ArrayList<>();
 
     //locations to travel to (goto)
-    //the state of that paticular location we want to go to - artefacts, furniture, etc...
+    //the state of that particular location we want to go to - artefacts, furniture, etc...
     Cluster clusterLocation = new Cluster();
 
     //Built-in command (look, inventory, inv, get, drop, goto)
