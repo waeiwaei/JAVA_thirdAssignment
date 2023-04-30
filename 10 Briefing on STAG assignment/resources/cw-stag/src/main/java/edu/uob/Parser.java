@@ -32,12 +32,19 @@ public class Parser {
     public ArrayList<String> combinedList;
 
 
-    public Parser(XMLEntities parseActions, Layout parseEntities){
+    public Parser(XMLEntities parseActions, Layout parseEntities, PlayerGameState currentPlayerState){
 
         this.state = new GameState();
 
         //parseDotFile
         this.artefactEntities = parseEntities.locations.getAllArtefactNames();
+
+        if(currentPlayerState.inventory.size() != 0) {
+            for (Artefacts inventory : currentPlayerState.inventory) {
+                this.artefactEntities.add(inventory.getName());
+            }
+        }
+
         this.furnitureEntities = parseEntities.locations.getAllFurnitureNames();
         this.characterEntities = parseEntities.locations.getAllCharacterNames();
         this.locations = parseEntities.locations.getLocationNames();

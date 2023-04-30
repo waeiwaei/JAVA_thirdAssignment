@@ -188,8 +188,8 @@ public class CurrentGame {
                 }
 
                 ArrayList<String> allArtefactNames = parseEntitiesList.locations.getAllArtefactNames();
-                ArrayList<String> allCharacterNames = parseEntitiesList.locations.getAllArtefactNames();
-                ArrayList<String> allFurnitureNames = parseEntitiesList.locations.getAllArtefactNames();
+                ArrayList<String> allCharacterNames = parseEntitiesList.locations.getAllCharacterNames();
+                ArrayList<String> allFurnitureNames = parseEntitiesList.locations.getAllFurnitureNames();
 
                 //need to identify if the produced entities is an artefact, furniture or characters
                 for(int i = 0; i < producedEntities.size(); i++){
