@@ -88,14 +88,22 @@ public class CurrentGame {
             if(counterSubjectEnt == numberSubjectEntities){
 
                 if(player.gamestateplayer.gameAction.consumed.size() != 0) {
-                    System.out.println("All entities are there - can perform action");
+
+                    boolean consumedEntityHealth = false;
+                    //check if the GameAction.consumed - health we will reduce
+                    for(int i = 0; i < player.gamestateplayer.gameAction.consumed.size(); i++){
+                        if(player.gamestateplayer.gameAction.consumed.get(i).equalsIgnoreCase("health")){
+                            consumedEntityHealth = true;
+                        }
+                    }
+
                     //then we can execute the action
                     //we need to remove entity (1) has been consumed from either the inventory or location and add it to the store room
                     String entityConsumed = player.gamestateplayer.gameAction.consumed.get(0);
 
                     //check if the entityConsumed is a location/cluster
                     //if it is we want to remove the path to it
-                    Boolean checkConsumedLocation = Locations.locationsList.contains(entityConsumed);
+                    Boolean checkConsumedLocation = parseEntitiesList.locations.getLocationNames().contains(entityConsumed);
                     if (checkConsumedLocation) {
                         //we want to remove the paths from this current cluster to that location
                         boolean currentLocationPathToConsumed = player.currentClusterLocation.paths.contains(entityConsumed);
@@ -114,7 +122,7 @@ public class CurrentGame {
                     }
 
                     //we want to remove that consumed-entity that is in the location
-                    if (consumedInLocation == true) {
+                    if (consumedInLocation == true && consumedEntityHealth == false) {
                         //we want to remove that entity and place it in store room (furniture/artefact) from the location
                         Object consumedEntityClass = entityInLocation.getClass();
 
@@ -138,7 +146,7 @@ public class CurrentGame {
                             throw new Exception("Error in line 135\n");
                         }
 
-                    } else {
+                    } else if(consumedInLocation != true && consumedEntityHealth == false){
                         //check if the consumed entity is in the inventory (can only hold artefacts) - remove it and add to store room
                         Artefacts consumedEntityInventory = player.getArtefactInventory(entityConsumed);
 
@@ -147,6 +155,21 @@ public class CurrentGame {
                             player.inventory.remove(consumedEntityInventory);
                             player.storeRoom.artefacts.add(consumedEntityInventory);
                         }
+
+                    }else if(consumedEntityHealth){
+
+                        player.health--;
+
+                        if(player.health == 0){
+                            //drop all inventory items of the player in the current location
+                            for(int i = 0; i < player.inventory.size(); i++){
+                                player.inventory.remove(player.inventory.get(i));
+                                player.currentClusterLocation.artefacts.add(player.inventory.get(i));
+                            }
+
+                            return "you died and lost all of your items, you must return to the start of the game\n\n";
+                        }
+
                     }
                 }
 
@@ -154,7 +177,7 @@ public class CurrentGame {
                 ArrayList<String> producedEntities = player.gamestateplayer.gameAction.produced;
                 //we want to see if any of the produced entitites are a location, if it is. then we want to create a path from the current location to that other location
                 for(int i = 0; i < producedEntities.size(); i++){
-                    Boolean checkProducedLocation = Locations.locationsList.contains(producedEntities.get(i));
+                    Boolean checkProducedLocation = parseEntitiesList.locations.getLocationNames().contains(producedEntities.get(i));
                     if(checkProducedLocation){
                         //we want to remove the paths from this current cluster to that location
                         boolean currentLocationPathtoProduced = player.currentClusterLocation.paths.contains(producedEntities.get(i));
@@ -164,10 +187,13 @@ public class CurrentGame {
                     }
                 }
 
+                ArrayList<String> allArtefactNames = parseEntitiesList.locations.getAllArtefactNames();
+                ArrayList<String> allCharacterNames = parseEntitiesList.locations.getAllArtefactNames();
+                ArrayList<String> allFurnitureNames = parseEntitiesList.locations.getAllArtefactNames();
 
                 //need to identify if the produced entities is an artefact, furniture or characters
                 for(int i = 0; i < producedEntities.size(); i++){
-                    if(Artefacts.listOfAllArtefactsNames.contains(producedEntities.get(i))){
+                    if(allArtefactNames.contains(producedEntities.get(i))){
 
                         //we then want to get this artefact from the storeroom cluster - remove it from the store room and add it to the current location
                         Artefacts fromStoreRoom = (Artefacts) player.storeRoom.getMatchingEntity(producedEntities.get(i));
@@ -175,7 +201,7 @@ public class CurrentGame {
                         player.currentClusterLocation.artefacts.add(fromStoreRoom);
                         player.storeRoom.artefacts.remove(fromStoreRoom);
 
-                    }else if(Furniture.listOfAllFurnitureNames.contains(producedEntities.get(i))){
+                    }else if(allFurnitureNames.contains(producedEntities.get(i))){
 
                         //we then want to get this artefact from the storeroom cluster - remove it from the store room and add it to the current location
                         Furniture fromStoreRoom = (Furniture) player.storeRoom.getMatchingEntity(producedEntities.get(i));
@@ -183,7 +209,7 @@ public class CurrentGame {
                         player.currentClusterLocation.furnitures.add(fromStoreRoom);
                         player.storeRoom.furnitures.remove(fromStoreRoom);
 
-                    }else if (Characters.listOfAllCharacterNames.contains(producedEntities.get(i))){
+                    }else if (allCharacterNames.contains(producedEntities.get(i))){
 
                         //try getting it from the store room first, if it is not there, then we will go through each location to and remove the lumberjack to follow the players currentLocation
                         GameEntity object = player.storeRoom.getMatchingEntity(producedEntities.get(i));
@@ -204,13 +230,18 @@ public class CurrentGame {
                                 }
                             }
 
-                        } else {
+                        }else {
 
                             //we then want to get this artefact from the storeroom cluster - remove it from the store room and add it to the current location
                             Characters fromStoreRoom = (Characters) player.storeRoom.getMatchingEntity(producedEntities.get(i));
 
                             player.currentClusterLocation.characters.add(fromStoreRoom);
                             player.storeRoom.characters.remove(fromStoreRoom);
+                        }
+                    }else if(producedEntities.get(i).equalsIgnoreCase("health")){
+
+                        if(player.health < 3) {
+                            player.health++;
                         }
                     }
 
@@ -334,7 +365,7 @@ public class CurrentGame {
             return lookCommand(player);
 
         }else{
-            throw new Exception("Error cannot move to that location");
+            throw new Exception("Cannot move to that location\n");
         }
     }
 

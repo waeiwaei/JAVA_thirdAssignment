@@ -38,35 +38,6 @@ public class Cluster {
         return null;
     }
 
-
 }
 
 
-//    public Artefacts getArtefact(String entity) {
-//        for (Artefacts artefact : artefacts) {
-//            if (artefact.getName().equals(entity)) {
-//                return artefact;
-//            }
-//        }
-//        return null;
-//    }
-//
-//    public Furniture getFurniture(String entity) {
-//        for (Furniture furn : furnitures) {
-//            if (furn.getName().equals(entity)) {
-//                return furn;
-//            }
-//        }
-//        return null;
-//    }
-//
-//
-//    public Characters getCharacter(String entity) {
-//        for (Characters character : characters) {
-//            if (character.getName().equals(entity)) {
-//                return character;
-//            }
-//        }
-//        return null;
-//    }
-//

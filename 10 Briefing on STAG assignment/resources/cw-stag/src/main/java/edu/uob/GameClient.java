@@ -17,7 +17,8 @@ public final class GameClient {
     private static final char END_OF_TRANSMISSION = 4;
 
     public static void main(String[] args) throws IOException {
-        String username ="waei";
+//        String username = args[0];
+        String username = "waei";
         while (!Thread.interrupted()) handleNextCommand(username);
     }
 

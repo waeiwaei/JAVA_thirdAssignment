@@ -16,16 +16,15 @@ import java.util.HashSet;
 /** This class implements the STAG server. */
 public final class GameServer {
 
-    Layout parseEntitiesList = new Layout();
-    XMLEntities parseActionList = new XMLEntities();
-    Parser pr;
+    Layout parseEntitiesList;
+    XMLEntities parseActionList;
+
     static CurrentGame currentGame;
     PlayerGameState player;
 
     private static final char END_OF_TRANSMISSION = 4;
 
-    public static void main(String[] args) throws Exception {
-
+    public static void main(String[] args) throws IOException {
         File entitiesFile = Paths.get("config" + File.separator + "basic-entities.dot").toAbsolutePath().toFile();
         File actionsFile = Paths.get("config" + File.separator + "basic-actions.xml").toAbsolutePath().toFile();
         GameServer server = new GameServer(entitiesFile, actionsFile);
@@ -56,15 +55,6 @@ public final class GameServer {
 
            player = new PlayerGameState(parseEntitiesList);
 
-//           PlayerGameState player = new PlayerGameState(parseEntitiesList);
-//           Tokenizer token = new Tokenizer("goto forest");
-//           pr = new Parser(parseActionList, parseEntitiesList);
-//           player.gamestateplayer = pr.parse(token);
-//
-////            currentGame = new CurrentGame(parseEntitiesList);
-//           String returnValue = CurrentGame.process(player, parseEntitiesList);
-//           System.out.println(returnValue);
-
        }catch(Exception err){
            System.out.println(err);
        }
@@ -77,7 +67,7 @@ public final class GameServer {
     *
     * <p>This method handles all incoming game commands and carries out the corresponding actions.
     */
-    public String handleCommand(String command) throws IOException {
+    public String handleCommand(String command) {
 
         String returnValue = "";
 
@@ -85,12 +75,10 @@ public final class GameServer {
         try {
 
             Tokenizer token = new Tokenizer(command);
-            pr = new Parser(parseActionList, parseEntitiesList);
+            Parser pr = new Parser(parseActionList, parseEntitiesList);
             player.gamestateplayer = pr.parse(token, player);
 
-//            currentGame = new CurrentGame(parseEntitiesList);
             returnValue = CurrentGame.process(player, parseEntitiesList);
-            //System.out.println(returnValue);
 
         }catch (Exception something){
             return something.getMessage();

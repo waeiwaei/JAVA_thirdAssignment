@@ -8,6 +8,7 @@ public class PlayerGameState {
     Cluster currentClusterLocation;
     Cluster storeRoom;
     ArrayList<Artefacts> inventory;
+    int health;
 
     public PlayerGameState (Layout Entities){
         this.currentClusterLocation = Entities.locations.clusters.get(0);
@@ -15,6 +16,7 @@ public class PlayerGameState {
         //is there a better way to get the storeroom cluster?
         this.storeRoom = Entities.locations.clusters.get(Entities.locations.clusters.size() - 1);
         this.inventory = new ArrayList<>();
+        this.health = 3;
     }
 
     public PlayerGameState(){

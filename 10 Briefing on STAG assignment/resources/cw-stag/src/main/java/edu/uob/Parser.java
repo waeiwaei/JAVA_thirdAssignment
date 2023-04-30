@@ -37,10 +37,10 @@ public class Parser {
         this.state = new GameState();
 
         //parseDotFile
-        this.artefactEntities = Artefacts.listOfAllArtefactsNames;
-        this.furnitureEntities = Furniture.listOfAllFurnitureNames;
-        this.characterEntities = Characters.listOfAllCharacterNames;
-        this.locations = Locations.locationsList;
+        this.artefactEntities = parseEntities.locations.getAllArtefactNames();
+        this.furnitureEntities = parseEntities.locations.getAllFurnitureNames();
+        this.characterEntities = parseEntities.locations.getAllCharacterNames();
+        this.locations = parseEntities.locations.getLocationNames();
 
 
         //parseXMLFile
@@ -96,9 +96,12 @@ public class Parser {
             }
         }
 
-        token.tokens = temporaryArray;
-        token.tokens.replaceAll(String::toLowerCase);
-
+        if(temporaryArray.size() != 0) {
+            token.tokens = temporaryArray;
+            token.tokens.replaceAll(String::toLowerCase);
+        }else{
+            throw new Exception ("Invalid command \n");
+        }
 
 
 
@@ -373,7 +376,7 @@ public class Parser {
             }
 
             //if the command does not contain any subjectEntities, we return false
-            if(numberOfSubjectEntities.size() != 1){
+            if(numberOfSubjectEntities.size() < 1){
                 return false;
             }
 
