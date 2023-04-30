@@ -39,7 +39,7 @@ public class Parser {
         //parseDotFile
         this.artefactEntities = parseEntities.locations.getAllArtefactNames();
 
-        if(currentPlayerState.inventory.size() != 0) {
+        if(currentPlayerState.inventory != null) {
             for (Artefacts inventory : currentPlayerState.inventory) {
                 this.artefactEntities.add(inventory.getName());
             }
@@ -213,11 +213,19 @@ public class Parser {
             }
 
             //checking if the token has both the action triggers and built-in commands, which is not allowed
-            if(builtInCommandCounter > 1 && actionTriggerCounter > 1){
+            if(builtInCommandCounter >= 1 && actionTriggerCounter >= 1){
                 return false;
             }
 
+
+//            String BCommand = checkCompositeCommand(token);
+//
+//            if(BCommand.isEmpty()){
+//                return false;
+//            }
+
             state.builtInCommand = BCommand;
+
             /**********************************************************************************************/
 
 
@@ -357,6 +365,14 @@ public class Parser {
 
     boolean checkActionCommands(Tokenizer token){
 
+        //if there are any built-intokens we want to return false
+        for(int k = 0; k < builtInCommands.size(); k++){
+            if(token.tokens.contains(builtInCommands.get(k))){
+                return false;
+            }
+        }
+
+
 //        int numberOfActionTriggers = 0;
         ArrayList<String> actionTriggersIdentified = new ArrayList<>();
         for(int i = 0; i < token.tokens.size(); i++){
@@ -444,6 +460,47 @@ public class Parser {
         }
 
         return false;
+    }
+
+    //check if the token passed is a composite command
+    public String checkCompositeCommand(Tokenizer token){
+        boolean checker = false;
+        int builtInCommandCounter = 0;
+        String BCommand = "";
+
+        //check if it is a composite built-in command (built-in command + built-in command)
+        for(int i = 0; i < token.tokens.size(); i++){
+            for(int j = 0; j < builtInCommands.size(); j++) {
+                if (token.tokens.get(i).equalsIgnoreCase(builtInCommands.get(j))) {
+                    builtInCommandCounter++;
+
+                    //if there is more than one built-in command, then it is considered to be a composite command which is not allowed
+                    if(builtInCommandCounter > 1){
+                        return "";
+                    }
+
+                    BCommand = token.tokens.get(i);
+                }
+            }
+        }
+
+        int actionTriggerCounter = 0;
+        //check if it is a composite built-in command + action trigger
+        for(int i = 0; i < token.tokens.size(); i++){
+            for(int j = 0; j < actionTriggers.size(); j++){
+                if(token.tokens.get(i).equalsIgnoreCase(actionTriggers.get(j))){
+                    actionTriggerCounter++;
+                }
+            }
+        }
+
+        //checking if the token has both the action triggers and built-in commands, which is not allowed
+        if(builtInCommandCounter >= 1 && actionTriggerCounter >= 1){
+            return "";
+        }
+
+
+        return BCommand;
     }
 
 }

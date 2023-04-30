@@ -124,7 +124,7 @@ public class CurrentGame {
                     //we want to remove that consumed-entity that is in the location
                     if (consumedInLocation == true && consumedEntityHealth == false) {
                         //we want to remove that entity and place it in store room (furniture/artefact) from the location
-                        Object consumedEntityClass = entityInLocation.getClass();
+//                        Object consumedEntityClass = entityInLocation.getClass();
 
                         if (entityInLocation instanceof Artefacts) {
                             //remove from currentlocation artefacts - add to store room
@@ -143,7 +143,7 @@ public class CurrentGame {
                             player.storeRoom.characters.add((Characters) entityInLocation);
 
                         } else {
-                            throw new Exception("Error in line 135\n");
+                            throw new Exception("the entity is not an instance of an artefact, furniture or character \n");
                         }
 
                     } else if(consumedInLocation != true && consumedEntityHealth == false){
@@ -161,12 +161,17 @@ public class CurrentGame {
                         player.health--;
 
                         if(player.health == 0){
-                            //drop all inventory items of the player in the current location
-                            for(int i = 0; i < player.inventory.size(); i++){
-                                player.inventory.remove(player.inventory.get(i));
-                                player.currentClusterLocation.artefacts.add(player.inventory.get(i));
-                            }
+                            if(player.inventory.size() > 0) {
+                                //drop all inventory items of the player in the current location
+//                                for (int i = 0; i < player.inventory.size(); i++) {
 
+                                    ArrayList<Artefacts> inventory = player.inventory;
+                                    player.currentClusterLocation.artefacts.addAll(inventory);
+
+                                    player.inventory = null;
+
+//                                }
+                            }
                             return "you died and lost all of your items, you must return to the start of the game\n\n";
                         }
 
@@ -257,7 +262,12 @@ public class CurrentGame {
     }
 
 
-    public static String lookCommand(PlayerGameState player){
+    public static String lookCommand(PlayerGameState player) throws Exception {
+
+        if(player.inventory == null){
+            throw new Exception("You are dead, please restart your game\n");
+        }
+
         String value = "You are currently in " + player.currentClusterLocation.description + ". You can see:\n";
 
         if (!player.currentClusterLocation.artefacts.isEmpty()) {
@@ -300,6 +310,11 @@ public class CurrentGame {
     }
 
     public static String getCommand(PlayerGameState player) throws Exception {
+
+        if(player.inventory == null){
+            throw new Exception("You are dead, please restart your game\n");
+        }
+
         String getArtefact = "You picked up a ";
 
         if(player.currentClusterLocation.artefacts.contains(player.gamestateplayer.artefact.get(0))){
@@ -315,11 +330,15 @@ public class CurrentGame {
             return getArtefact;
 
         }else{
-            throw new Exception("Location does not contain artefact: "+ player.gamestateplayer.artefact.get(0));
+            throw new Exception("Location does not contain artefact: "+ player.gamestateplayer.artefact.get(0).getName() +"\n");
         }
     }
 
     public static String dropCommand(PlayerGameState player) throws Exception {
+
+        if(player.inventory == null){
+            throw new Exception("You are dead, please restart your game\n");
+        }
 
         if(!player.inventory.isEmpty()) {
             String dropArtefacet = "You dropped ";
@@ -332,7 +351,7 @@ public class CurrentGame {
                 return dropArtefacet;
 
             } else {
-                throw new Exception("Inventory does not have: " + player.gamestateplayer.artefact.get(0)+ "\n");
+                throw new Exception("Inventory does not have: " + player.gamestateplayer.artefact.get(0).getName()+ "\n");
             }
         }else{
             throw new Exception("Inventory is empty\n");
@@ -340,6 +359,12 @@ public class CurrentGame {
     }
 
     public static String inventoryCommand(PlayerGameState player) throws Exception {
+
+        if(player.inventory == null){
+            throw new Exception("You are dead, please restart your game\n");
+        }
+
+
         String inventoryListString = "";
 
         if(!player.inventory.isEmpty()){
@@ -354,6 +379,11 @@ public class CurrentGame {
     }
 
     public static String gotoCommand(PlayerGameState player, Layout parseEntitiesList) throws Exception {
+
+        if(player.inventory == null){
+            throw new Exception("You are dead, please restart your game\n");
+        }
+
         boolean clusterIsAvailable = player.currentClusterLocation.paths.contains(player.gamestateplayer.clusterLocation.name);
 
         if(clusterIsAvailable) {

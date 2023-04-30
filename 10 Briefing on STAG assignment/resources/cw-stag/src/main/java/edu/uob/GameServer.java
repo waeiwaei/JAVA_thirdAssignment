@@ -55,6 +55,12 @@ public final class GameServer {
 
            player = new PlayerGameState(parseEntitiesList);
 
+//           Tokenizer token = new Tokenizer("chop with axe to cut down tree");
+//           Parser pr = new Parser(parseActionList, parseEntitiesList, player);
+//           player.gamestateplayer = pr.parse(token, player);
+//
+//           CurrentGame.process(player, parseEntitiesList);
+
        }catch(Exception err){
            System.out.println(err);
        }
