@@ -5,7 +5,7 @@ import java.util.ArrayList;
 public class GameState {
 
     //GameAction to be performed if the instruction is provided
-    GameAction gameAction = new GameAction();
+    GameAction gameAction;
 
     //Artefact to be manipulated with
     ArrayList<Artefacts> artefact = new ArrayList<>();

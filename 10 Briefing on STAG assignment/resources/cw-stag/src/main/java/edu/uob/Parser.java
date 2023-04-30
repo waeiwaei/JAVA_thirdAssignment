@@ -360,6 +360,7 @@ public class Parser {
 
         //[chop , tree]
         if(actionTriggersIdentified.size() == 1){
+            state.gameAction = new GameAction();
 
             //we need to check if there is atleast one subject entity exists
             ArrayList<String> numberOfSubjectEntities = new ArrayList<>();
@@ -389,6 +390,7 @@ public class Parser {
         // [chop,axe,cutdown,tree]
 
         }else if (actionTriggersIdentified.size() == 2){
+            state.gameAction = new GameAction();
 
             //both unqiue action keyphrase triggers - "cutdown" and "chop"
             //but both triggers contains the same GameAction within their list - so this is still a valid action
